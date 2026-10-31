@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>es OS</title>
+  <meta name="description" content="브라우저 안에 있는 나만의 작은 컴퓨터">
+  <meta name="theme-color" content="#efe7fb">
+  <meta property="og:title" content="es OS">
+  <meta property="og:description" content="브라우저 안에 있는 나만의 작은 컴퓨터">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="wallpaper" aria-hidden="true"></div>
+  <header id="menubar" role="menubar"></header>
+  <main id="desktop" aria-label="데스크탑">
+    <div id="widgets"></div>
+    <div id="desk-icons"></div>
+  </main>
+  <div id="windows"></div>
+  <nav id="dock" aria-label="Dock"></nav>
+  <div id="spotlight" hidden></div>
+  <div id="lock" hidden></div>
+  <noscript><p class="noscript">es OS는 JavaScript가 필요해요.</p></noscript>
+  <script>
+    // 잠금 화면을 스크립트 로딩 전에 먼저 보여줍니다.
+    document.getElementById('lock').hidden = false;
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

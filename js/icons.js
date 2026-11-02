@@ -115,6 +115,10 @@ export const I = {
   compose: svg('<path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.5 3.5a2.1 2.1 0 0 1 3 3L13 15l-4 1 1-4z"/>', 1.8),
   battery: '<svg viewBox="0 0 28 16" aria-hidden="true"><rect x="1" y="2" width="22" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.3" opacity=".45"/><rect class="bat-fill" x="3" y="4" width="18" height="8" rx="2" fill="currentColor"/><rect x="24.3" y="6" width="2" height="4" rx="1" fill="currentColor" opacity=".45"/></svg>',
   wallpaperFrom: svg('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 12h8M12 8v8"/>', 1.8),
+  link: svg('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>', 1.9),
+  globe: svg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3z"/>', 1.7),
+  refresh: svg('<path d="M20 12a8 8 0 1 1-2.4-5.7L20 8.5"/><path d="M20 4v4.5h-4.5"/>', 1.8),
+  external: svg('<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>', 1.8),
   expand: svg('<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>', 1.8),
 };
 
@@ -136,6 +140,8 @@ export function appIcon(app) {
     }
     case 'settings':
       return `<span class="appicon" style="--bg:linear-gradient(160deg,#c4c7d2,#7b7f90)">${appSvg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>', 1.6)}</span>`;
+    case 'terminal':
+      return `<span class="appicon" style="--bg:linear-gradient(160deg,#3b3f4e,#16181f)">${appSvg('<path d="m6 8 4 4-4 4"/><path d="M12.5 16.5H18"/>', 2.1)}</span>`;
     case 'trash':
     case 'trash-full':
       return `<span class="appicon glass" style="--bg:rgba(255,255,255,.45)">${appSvg(
@@ -146,4 +152,11 @@ export function appIcon(app) {
       )}</span>`;
   }
   return '';
+}
+
+/** 웹 앱 아이콘: 첫 글자 + 고른 색 */
+export function webAppIcon(app) {
+  const color = app?.color || '#5b7cfa';
+  const letter = String(app?.name || '?').trim().charAt(0).toUpperCase();
+  return `<span class="appicon webapp" style="--bg:linear-gradient(160deg,color-mix(in srgb,${color} 70%,white),${color})"><b>${letter.replace(/[<>&"]/g, '')}</b></span>`;
 }

@@ -1,7 +1,7 @@
 // 바탕화면 껍데기: 메뉴 막대, Dock, 데스크탑 아이콘, 위젯, 검색, 잠금 화면
 import * as S from './store.js';
-import { I, appIcon, fileIcon, tagColor } from './icons.js';
-import { APPS, launch } from './apps.js';
+import { I, appIcon as baseAppIcon, webAppIcon, fileIcon, tagColor } from './icons.js';
+import { APPS, launch, appInfo, allAppKeys } from './apps.js';
 import { onWinChange, focusedWin, windowsOf, close, blurAll, allWindows } from './wm.js';
 import {
   esc, showMenu, closeMenu, menuOpen, startRename, setDragIds, makeDropTarget,
@@ -14,6 +14,8 @@ import { openCalendar } from './apps/calendar.js';
 import { resolvedTheme } from './appearance.js';
 
 const $ = (s) => document.querySelector(s);
+const appIcon = (k) => (String(k).startsWith('web:') ? webAppIcon(appInfo(k)?.web) : baseAppIcon(k));
+const appName = (k) => appInfo(k)?.name || '앱';
 const fmtClock = (d, opts = {}) =>
   d.toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit', hour12: !S.state.settings.clock24, ...opts });
 
@@ -41,10 +43,10 @@ function menuFor(key) {
       ];
     case 'app':
       return [
-        { label: `${APPS[app].name}에 관하여`, icon: I.info, action: () => openSettings('about') },
+        { label: `${appName(app)}에 관하여`, icon: I.info, action: () => openSettings('about') },
         { sep: true },
         app === 'finder' ? { label: '새로운 Finder 윈도우', icon: I.folderPlus, action: () => openFinder() } : null,
-        { label: `${APPS[app].name} 종료`, icon: I.x, disabled: !windowsOf(app).length, action: () => windowsOf(app).forEach(close) },
+        { label: `${appName(app)} 종료`, icon: I.x, disabled: !windowsOf(app).length, action: () => windowsOf(app).forEach(close) },
       ];
     case 'file':
       return [
@@ -119,7 +121,7 @@ function initMenubar() {
   mb.querySelector('.mb-clock').onclick = () => openCalendar();
   mb.querySelector('.mb-theme').onclick = () => S.setSetting('theme', resolvedTheme() === 'dark' ? 'light' : 'dark');
 
-  const updateApp = () => (mb.querySelector('.mb-app b').textContent = APPS[currentApp()].name);
+  const updateApp = () => (mb.querySelector('.mb-app b').textContent = appName(currentApp()));
   const updateTheme = () => (mb.querySelector('.mb-theme').innerHTML = resolvedTheme() === 'dark' ? I.moon : I.sun);
   onWinChange(updateApp);
   S.on('settings', () => (updateTheme(), tick()));
@@ -153,14 +155,16 @@ function initMenubar() {
 }
 
 /* =================== Dock =================== */
-const DOCK_APPS = ['finder', 'notes', 'photos', 'calendar', 'settings'];
+const DOCK_APPS = ['finder', 'notes', 'photos', 'calendar', 'terminal', 'settings'];
+const dockKeys = () => [...DOCK_APPS, ...allAppKeys().filter((k) => k.startsWith('web:'))];
 
-function initDock() {
-  const dock = $('#dock');
+function renderDockItems(dock) {
+  const webs = dockKeys().filter((k) => k.startsWith('web:'));
+  const item = (a) => `<button class="dock-item" data-app="${a}" aria-label="${esc(appName(a))}"><span class="dock-label">${esc(appName(a))}</span>${appIcon(a)}<span class="dot"></span></button>`;
   dock.innerHTML =
-    DOCK_APPS.map((a) => `<button class="dock-item" data-app="${a}" aria-label="${APPS[a].name}"><span class="dock-label">${APPS[a].name}</span>${appIcon(a)}<span class="dot"></span></button>`).join('') +
+    DOCK_APPS.map(item).join('') +
+    (webs.length ? `<span class="dock-sep"></span>${webs.map(item).join('')}` : '') +
     `<span class="dock-sep"></span><button class="dock-item" data-app="trash" aria-label="휴지통"><span class="dock-label">휴지통</span><span class="trash-ic"></span></button>`;
-
   dock.querySelectorAll('.dock-item').forEach((b) => {
     b.onclick = () => {
       if (b.dataset.app === 'trash') return openFinder('trash');
@@ -172,12 +176,30 @@ function initDock() {
       }
     };
   });
+}
+
+function initDock() {
+  const dock = $('#dock');
+  renderDockItems(dock);
+  let webSig = JSON.stringify(S.state.settings.webApps || null);
+  S.on('settings', () => {
+    const sig = JSON.stringify(S.state.settings.webApps || null);
+    if (sig === webSig) return;
+    webSig = sig;
+    renderDockItems(dock);
+    makeDropTarget(dock.querySelector('[data-app="trash"]'), () => 'trash');
+    updateTrash();
+    updateDots();
+    items = [...dock.querySelectorAll('.dock-item')];
+  });
   makeDropTarget(dock.querySelector('[data-app="trash"]'), () => 'trash');
 
-  const updateTrash = () =>
-    (dock.querySelector('.trash-ic').innerHTML = appIcon(S.children('trash').length ? 'trash-full' : 'trash'));
-  const updateDots = () =>
+  function updateTrash() {
+    dock.querySelector('.trash-ic').innerHTML = appIcon(S.children('trash').length ? 'trash-full' : 'trash');
+  }
+  function updateDots() {
     dock.querySelectorAll('.dock-item[data-app]').forEach((b) => b.classList.toggle('running', windowsOf(b.dataset.app).length > 0));
+  }
   updateTrash();
   updateDots();
   S.on('fs', updateTrash);
@@ -194,7 +216,7 @@ function initDock() {
   }, 60000);
 
   // 마우스를 올리면 아이콘이 커지는 효과
-  const items = [...dock.querySelectorAll('.dock-item')];
+  let items = [...dock.querySelectorAll('.dock-item')];
   let raf = 0;
   dock.addEventListener('pointermove', (e) => {
     if (e.pointerType !== 'mouse') return;
@@ -412,10 +434,11 @@ function spotSearch(q) {
   const c = calc(q);
   if (c !== null) res.push({ icon: `<span class="calc-ic">=</span>`, title: c.toLocaleString('ko-KR'), sub: '계산 결과 · Enter로 복사', run: () => navigator.clipboard?.writeText(String(c)) });
   if (!q) {
-    Object.entries(APPS).forEach(([k, a]) => res.push({ icon: appIcon(k), title: a.name, sub: '앱', run: () => launch(k) }));
+    allAppKeys().forEach((k) => res.push({ icon: appIcon(k), title: appName(k), sub: '앱', run: () => launch(k) }));
     return res;
   }
-  Object.entries(APPS).forEach(([k, a]) => {
+  allAppKeys().forEach((k) => {
+    const a = appInfo(k);
     if ((a.name + ' ' + a.keywords).toLowerCase().includes(ql)) res.push({ icon: appIcon(k), title: a.name, sub: '앱', run: () => launch(k) });
   });
   const extra = [

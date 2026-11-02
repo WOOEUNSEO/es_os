@@ -34,6 +34,7 @@ export function openNotes(fileId) {
         <input class="note-title" aria-label="제목" spellcheck="false">
         <div class="note-date"></div>
         <textarea class="note-body" aria-label="내용" placeholder="여기에 내용을 적어 보세요."></textarea>
+        <div class="note-links" hidden></div>
       </div>
       <div class="note-empty" hidden>메모를 선택하거나 새로 만들어 보세요.</div>
     </div>`;
@@ -68,6 +69,19 @@ export function openNotes(fileId) {
     if (document.activeElement !== body && body.value !== n.content) body.value = n.content;
     $('.note-date').textContent = new Date(n.mtime).toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' });
     $('.note-path').textContent = S.pathOf(n.id);
+    renderLinks(body.value);
+  }
+
+  // 메모 속 링크는 아래에 눌러서 열 수 있는 칩으로 보여줘요.
+  function renderLinks(text) {
+    const box = $('.note-links');
+    const urls = [...new Set((String(text || '').match(/https?:\/\/[^\s<>"')\]]+/g) || []).map((u) => u.replace(/[.,;:!?]+$/, '')))].slice(0, 12);
+    box.hidden = !urls.length;
+    box.innerHTML = urls.map((u) => {
+      let label = u;
+      try { const x = new URL(u); label = x.host.replace(/^www\./, '') + (x.pathname.length > 1 ? x.pathname : ''); } catch {}
+      return `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer" title="${esc(u)}">${I.link || '↗'}<span>${esc(label.length > 48 ? label.slice(0, 47) + '…' : label)}</span></a>`;
+    }).join('');
   }
 
   function select(id) {
@@ -115,6 +129,7 @@ export function openNotes(fileId) {
   };
 
   body.addEventListener('input', () => {
+    renderLinks(body.value);
     if (!cur) return;
     S.update(cur, { content: body.value }, { quiet: true });
     $('.note-date').textContent = '방금 수정됨';

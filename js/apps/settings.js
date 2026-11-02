@@ -4,11 +4,14 @@ import { openWindow, getWindow, focus, restore } from '../wm.js';
 import { I } from '../icons.js';
 import { esc, fmtSize, confirmDialog, toast, pickFiles } from '../ui.js';
 import { WALLPAPERS, ACCENTS, wallpaperCss } from '../appearance.js';
+import { webApps } from './webapp.js';
+import { webAppIcon } from '../icons.js';
 
 const SECTIONS = [
   ['general', '일반', I.user, '#8e92a2'],
   ['appearance', '모양', I.palette, '#5b7cfa'],
   ['wallpaper', '배경화면', I.wallpaper, '#2aa7c9'],
+  ['webapps', '웹 앱', I.globe, '#e0675a'],
   ['data', '데이터', I.database, '#2fb57f'],
   ['about', '이 컴퓨터에 관하여', I.info, '#9a6cf2'],
 ];
@@ -108,6 +111,47 @@ export function openSettings(section = 'general') {
           S.state.settings.customWallpaper = n.content;
           S.setSetting('wallpaper', 'custom');
         }
+      };
+    }
+
+    if (cur === 'webapps') {
+      const list = webApps();
+      const COLORS = ['#e0675a', '#5b7cfa', '#2fb57f', '#a26bf5', '#f0a43a', '#3b3f4e'];
+      body.innerHTML = `
+        <div class="card">
+          ${list.length ? list.map((a) => `
+            <div class="set-row web-row">${webAppIcon(a)}<div><b>${esc(a.name)}</b><small>${esc(a.url)}</small></div>
+              <button class="btn small danger web-del" data-id="${esc(a.id)}">빼기</button></div>`).join('') : `<div class="set-row"><small>아직 넣은 웹 앱이 없어요.</small></div>`}
+        </div>
+        <div class="card">
+          <div class="set-row col"><b>웹 앱 넣기</b><small>GitHub Pages · Render 등에 올린 내 웹사이트 주소를 넣으면 Dock에 앱으로 생겨요.</small>
+            <div class="web-form">
+              <input class="field web-name" placeholder="이름 (예: 부티크 스케줄러)" maxlength="20">
+              <input class="field web-url" placeholder="https://아이디.github.io/저장소/" inputmode="url">
+              <div class="web-colors">${COLORS.map((c, i) => `<button type="button" class="web-color ${i === 0 ? 'on' : ''}" data-c="${c}" style="--c:${c}" aria-label="색"></button>`).join('')}</div>
+              <button class="btn small primary web-add">${I.plus}<span>넣기</span></button>
+            </div>
+          </div>
+          <div class="note-box">${I.info}<p>창 안에서 바로 열려요. 단, 구글 · 네이버처럼 다른 사이트 안에 들어가는 걸 막아 둔 곳은 빈 화면이 될 수 있어요. 그럴 땐 창 오른쪽 위 ↗ 버튼으로 새 탭에서 열면 돼요. 내가 만든 GitHub Pages · Render 사이트는 대부분 잘 열려요.</p></div>
+        </div>`;
+      let color = COLORS[0];
+      body.querySelectorAll('.web-color').forEach((b) => (b.onclick = () => {
+        color = b.dataset.c;
+        body.querySelectorAll('.web-color').forEach((x) => x.classList.toggle('on', x === b));
+      }));
+      body.querySelectorAll('.web-del').forEach((b) => (b.onclick = () => {
+        S.setSetting('webApps', webApps().filter((a) => a.id !== b.dataset.id));
+        render();
+      }));
+      body.querySelector('.web-add').onclick = () => {
+        const name = body.querySelector('.web-name').value.trim();
+        let url = body.querySelector('.web-url').value.trim();
+        if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
+        try { new URL(url); } catch { return toast('주소를 확인해 주세요'); }
+        if (!name) return toast('이름을 적어 주세요');
+        S.setSetting('webApps', [...webApps(), { id: S.uid(), name, url, color }]);
+        toast(`${name} 앱을 Dock에 넣었어요`);
+        render();
       };
     }
 

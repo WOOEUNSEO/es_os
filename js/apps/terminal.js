@@ -352,7 +352,6 @@ export function openTerminal() {
   win.body.addEventListener('pointerup', () => { if (!window.getSelection()?.toString()) input.focus(); });
 
   refreshPs();
-  print(`Last login: ${new Date().toString().slice(0, 24)} on ttys000\n<span class="t-dim">es OS 연습용 터미널이에요. help 를 입력하면 쓸 수 있는 명령어가 나와요.\n여기서 만든 파일 · 폴더는 Finder에도 그대로 보여요. (rm 은 휴지통으로 보내요)</span>`, 'pre');
   setTimeout(() => input.focus(), 50);
   win.term = { input };
   return win;

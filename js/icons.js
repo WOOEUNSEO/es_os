@@ -115,6 +115,7 @@ export const I = {
   compose: svg('<path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.5 3.5a2.1 2.1 0 0 1 3 3L13 15l-4 1 1-4z"/>', 1.8),
   battery: '<svg viewBox="0 0 28 16" aria-hidden="true"><rect x="1" y="2" width="22" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.3" opacity=".45"/><rect class="bat-fill" x="3" y="4" width="18" height="8" rx="2" fill="currentColor"/><rect x="24.3" y="6" width="2" height="4" rx="1" fill="currentColor" opacity=".45"/></svg>',
   wallpaperFrom: svg('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 12h8M12 8v8"/>', 1.8),
+  checklist: svg('<circle cx="5.5" cy="7" r="2.3"/><path d="m4.4 7 .9.9 1.6-1.7"/><circle cx="5.5" cy="16.5" r="2.3"/><path d="M10.5 7H20M10.5 16.5H20"/>', 1.7),
   link: svg('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>', 1.9),
   globe: svg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3z"/>', 1.7),
   refresh: svg('<path d="M20 12a8 8 0 1 1-2.4-5.7L20 8.5"/><path d="M20 4v4.5h-4.5"/>', 1.8),

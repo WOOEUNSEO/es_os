@@ -27,6 +27,7 @@ export function openNotes(fileId) {
       <header class="toolbar" data-drag>
         <div class="tb-title"><span class="tb-path note-path"></span></div>
         <div class="tb-spacer"></div>
+        <button class="tb chk" title="체크리스트 (줄 앞에 체크 동그라미 넣기)" aria-label="체크리스트">${I.checklist}</button>
         <button class="tb del" title="휴지통으로 이동" aria-label="휴지통으로 이동">${I.trash}</button>
         <button class="tb new" title="새로운 메모" aria-label="새로운 메모">${I.compose}</button>
       </header>
@@ -60,6 +61,7 @@ export function openNotes(fileId) {
     $('.note-editor').hidden = !ok;
     $('.note-empty').hidden = !!ok;
     $('.del').disabled = !ok;
+    $('.chk').disabled = !ok;
     if (!ok) {
       cur = null;
       $('.note-path').textContent = '';
@@ -149,7 +151,54 @@ export function openNotes(fileId) {
   title.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') (e.preventDefault(), body.focus());
   });
+  // ---------- 체크리스트: 줄 앞의 ⚪(할 일) · ✅(완료). 동그라미를 누르면 체크, Enter 로 다음 항목 ----------
+  const OPEN = '⚪', DONE = '✅';
+  const isItem = (line) => line.startsWith(OPEN + ' ') || line.startsWith(DONE + ' ');
+  const lineStartAt = (pos) => body.value.lastIndexOf('\n', pos - 1) + 1;
+  const saveBody = () => body.dispatchEvent(new Event('input'));
+  function toggleChecklist() {
+    const v = body.value;
+    const a = lineStartAt(body.selectionStart);
+    let b = v.indexOf('\n', Math.max(body.selectionEnd - (body.selectionEnd > body.selectionStart && v[body.selectionEnd - 1] === '\n' ? 1 : 0), a));
+    if (b < 0) b = v.length;
+    const lines = v.slice(a, b).split('\n');
+    const allItems = lines.every((l) => isItem(l));
+    const next = lines.map((l) => (allItems ? l.slice(2) : isItem(l) ? l : `${OPEN} ${l}`)).join('\n');
+    body.setRangeText(next, a, b, 'select');
+    if (lines.length === 1) body.setSelectionRange(a + next.length, a + next.length);
+    body.focus();
+    saveBody();
+  }
+  $('.chk').onclick = () => { if (cur) toggleChecklist(); };
+  // 동그라미(줄 맨 앞 두 칸)를 누르면 체크 · 해제
+  body.addEventListener('mouseup', () => {
+    if (body.selectionStart !== body.selectionEnd) return;
+    const pos = body.selectionStart;
+    const a = lineStartAt(pos);
+    if (pos - a > 1) return;
+    const line = body.value.slice(a, a + 2);
+    if (!isItem(body.value.slice(a, a + 3))) return;
+    const mark = line[0] === OPEN ? DONE : OPEN;
+    body.setRangeText(mark, a, a + 1, 'preserve');
+    const end = body.value.indexOf('\n', a);
+    const to = end < 0 ? body.value.length : end;
+    body.setSelectionRange(to, to);
+    saveBody();
+  });
   body.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && body.selectionStart === body.selectionEnd) {
+      const pos = body.selectionStart;
+      const a = lineStartAt(pos);
+      const line = body.value.slice(a, pos);
+      if (isItem(line + ' ') || isItem(line)) {
+        e.preventDefault();
+        if (line.trim().length <= 1) body.setRangeText('', a, pos, 'end'); // 빈 항목에서 Enter → 체크리스트 끝
+        else body.setRangeText(`\n${OPEN} `, pos, pos, 'end');
+        saveBody();
+        return;
+      }
+    }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); toggleChecklist(); return; }
     if (e.key === 'Tab') {
       e.preventDefault();
       body.setRangeText('\t', body.selectionStart, body.selectionEnd, 'end');

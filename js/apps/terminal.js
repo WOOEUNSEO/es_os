@@ -6,28 +6,28 @@ import { esc } from '../ui.js';
 
 const HOME = 'home';
 const HELP = [
-  ['pwd', '지금 있는 위치'],
-  ['ls [-l] [경로]', '파일 목록 (-l: 자세히)'],
-  ['cd <경로>', '폴더 이동 (cd .. · cd ~ · cd -)'],
-  ['mkdir [-p] <이름>', '폴더 만들기'],
-  ['touch <이름>', '빈 파일 만들기'],
-  ['cat <파일>', '파일 내용 보기'],
-  ['echo <글> [> 파일 | >> 파일]', '글 출력 · 파일에 쓰기 / 이어 쓰기'],
-  ['cp <원본> <대상>', '복사'],
-  ['mv <원본> <대상>', '옮기기 · 이름 바꾸기'],
-  ['rm [-r] <경로>', '휴지통으로 보내기'],
-  ['rmdir <폴더>', '빈 폴더 지우기'],
-  ['head / tail [-n N] <파일>', '앞 · 뒤 N줄'],
-  ['wc <파일>', '줄 · 단어 · 글자 수'],
-  ['grep [-i] [-n] <글> <파일>', '파일에서 글 찾기'],
-  ['find [경로] -name <패턴>', '이름으로 찾기 (* 사용 가능)'],
-  ['tree [경로]', '폴더 구조 그리기'],
-  ['sort / uniq <파일>', '줄 정렬 · 중복 제거'],
-  ['명령 | 명령', '파이프 (예: cat a.txt | grep 사과 | wc -l)'],
-  ['date · whoami · hostname · uname', '시스템 정보'],
-  ['history · clear · exit', '기록 · 화면 지우기 · 닫기'],
-  ['open <파일>', 'es OS 앱으로 열기'],
-  ['chmod · sudo · ps · kill', '연습용 흉내 (실제로 바뀌지 않음)'],
+  ['pwd', 'print working directory'],
+  ['ls [-l] [path]', 'list files (-l: long format)'],
+  ['cd <path>', 'change directory (cd .. · cd ~ · cd -)'],
+  ['mkdir [-p] <name>', 'make a directory'],
+  ['touch <name>', 'create an empty file'],
+  ['cat <file>', 'print file contents'],
+  ['echo <text> [> file | >> file]', 'print text · write / append to a file'],
+  ['cp <source> <dest>', 'copy'],
+  ['mv <source> <dest>', 'move · rename'],
+  ['rm [-r] <path>', 'move to Trash'],
+  ['rmdir <dir>', 'remove an empty directory'],
+  ['head / tail [-n N] <file>', 'first · last N lines'],
+  ['wc <file>', 'line · word · character count'],
+  ['grep [-i] [-n] <text> <file>', 'search text in a file'],
+  ['find [path] -name <pattern>', 'find by name (* wildcard)'],
+  ['tree [path]', 'show directory tree'],
+  ['sort / uniq <file>', 'sort lines · remove duplicates'],
+  ['cmd | cmd', 'pipe (e.g. cat a.txt | grep apple | wc -l)'],
+  ['date · whoami · hostname · uname', 'system info'],
+  ['history · clear · exit', 'history · clear screen · close'],
+  ['open <file>', 'open with an es OS app'],
+  ['chmod · sudo · ps · kill', 'practice only (nothing really changes)'],
 ];
 
 export function openTerminal() {
@@ -75,16 +75,16 @@ export function openTerminal() {
     return { pid: resolve(dir), name };
   }
   const isDir = (id) => S.node(id)?.type === 'folder';
-  const textOf = (id) => { const n = S.node(id); return n?.kind === 'text' ? String(n.content || '') : `[${n?.kind || '파일'} 파일은 터미널에서 내용을 볼 수 없어요]`; };
+  const textOf = (id) => { const n = S.node(id); return n?.kind === 'text' ? String(n.content || '') : `[cannot display ${n?.kind || 'binary'} file in the terminal]`; };
   const err = (m) => { throw new Error(m); };
   // 없는 경로면 같은 이름이 다른 곳에 있는지 찾아서 알려준다 (예: ~/데스크탑/ES)
   const hintFor = (p) => {
     const name = String(p || '').replace(/^[a-z]+: /, '').split('/').filter(Boolean).pop();
     if (!name || name === '.' || name === '..') return '';
     const found = S.allNodes((n) => n.name === name).slice(0, 3).map((n) => S.pathOf(n.id));
-    return found.length ? `\n  혹시 여기 있는 걸 말한 거예요? ${found.join(' · ')}\n  지금 위치는 ${shortPath(cwd)} 예요. (pwd 로 확인, ls 로 둘러보기)` : '';
+    return found.length ? `\n  Did you mean: ${found.join(' · ')}\n  You are in ${shortPath(cwd)} (check with pwd, look around with ls)` : '';
   };
-  const need = (id, p) => id || err(`${p}: 그런 파일이나 폴더가 없어요${hintFor(p)}`);
+  const need = (id, p) => id || err(`${p}: No such file or directory${hintFor(p)}`);
   const linesOf = (t) => (t.endsWith('\n') ? t.slice(0, -1) : t).split('\n');
 
   // ---------- 명령 ----------
@@ -109,10 +109,10 @@ export function openTerminal() {
 
   function writeFile(path, text, append) {
     let id = resolve(path);
-    if (id && isDir(id)) err(`${path}: 폴더에는 쓸 수 없어요`);
+    if (id && isDir(id)) err(`${path}: Is a directory`);
     if (!id) {
       const { pid, name } = parentAndName(path);
-      if (!pid || !isDir(pid)) err(`${path}: 그런 폴더가 없어요`);
+      if (!pid || !isDir(pid)) err(`${path}: No such directory`);
       id = S.create(pid, { name, kind: 'text', content: '' }).id;
     }
     const n = S.node(id);
@@ -120,7 +120,7 @@ export function openTerminal() {
   }
 
   const CMDS = {
-    help: () => HELP.map(([c, d]) => `<span class="t-cmd">${esc(c.padEnd(30))}</span>${esc(d)}`).join('\n'),
+    help: () => HELP.map(([c, d]) => `<span class="t-cmd">${esc(c.padEnd(31))} </span>${esc(d)}`).join('\n'),
     pwd: () => S.pathOf(cwd).replace(/^~/, `/home/${user()}`),
     whoami: () => user(),
     hostname: () => 'es-os',
@@ -133,7 +133,7 @@ export function openTerminal() {
     cd: ([p]) => {
       const target = p === '-' ? prev : resolve(p ?? '~');
       need(target, `cd: ${p}`);
-      if (!isDir(target)) err(`cd: ${p}: 폴더가 아니에요`);
+      if (!isDir(target)) err(`cd: ${p}: Not a directory`);
       prev = cwd; cwd = target; refreshPs(); return null;
     },
     ls: (args) => {
@@ -151,26 +151,26 @@ export function openTerminal() {
     },
     mkdir: (args) => {
       const { f, rest } = flags(args);
-      if (!rest.length) err('mkdir: 폴더 이름을 적어 주세요');
+      if (!rest.length) err('usage: mkdir [-p] <name>');
       rest.forEach((p) => {
-        if (resolve(p)) { if (!f.has('p')) err(`mkdir: ${p}: 이미 있어요`); return; }
+        if (resolve(p)) { if (!f.has('p')) err(`mkdir: ${p}: File exists`); return; }
         let cur = p.startsWith('/') || p.startsWith('~') ? HOME : cwd;
         const parts = p.replace(/^~\/?/, '').replace(/^\//, '').split('/').filter(Boolean);
         parts.forEach((part, i) => {
           const ex = part === '..' ? S.node(cur)?.parent : childNamed(cur, part)?.id;
           if (ex) { cur = ex; return; }
-          if (!f.has('p') && i < parts.length - 1) err(`mkdir: ${p}: 그런 폴더가 없어요 (-p를 쓰면 한 번에 만들어요)`);
+          if (!f.has('p') && i < parts.length - 1) err(`mkdir: ${p}: No such file or directory (use -p to create parent directories)`);
           cur = S.create(cur, { type: 'folder', name: part }).id;
         });
       });
       return null;
     },
     touch: (args) => {
-      if (!args.length) err('touch: 파일 이름을 적어 주세요');
+      if (!args.length) err('usage: touch <name>');
       args.forEach((p) => { const id = resolve(p); id ? S.update(id, {}) : writeFile(p, '', false); });
       return null;
     },
-    cat: (args, stdin) => (args.length ? args.map((p) => { const id = need(resolve(p), `cat: ${p}`); if (isDir(id)) err(`cat: ${p}: 폴더예요`); return esc(textOf(id)); }).join('\n') : esc(stdin ?? '')),
+    cat: (args, stdin) => (args.length ? args.map((p) => { const id = need(resolve(p), `cat: ${p}`); if (isDir(id)) err(`cat: ${p}: Is a directory`); return esc(textOf(id)); }).join('\n') : esc(stdin ?? '')),
     head: (args, stdin, tail = false) => {
       let n = 10; const rest = [];
       for (let i = 0; i < args.length; i++) { if (args[i] === '-n') n = parseInt(args[++i], 10) || 10; else if (/^-\d+$/.test(args[i])) n = -parseInt(args[i], 10); else rest.push(args[i]); }
@@ -191,7 +191,7 @@ export function openTerminal() {
     grep: (args, stdin) => {
       const { f, rest } = flags(args);
       const [pat, file] = rest;
-      if (!pat) err('grep: 찾을 글을 적어 주세요');
+      if (!pat) err('usage: grep [-i] [-n] <text> [file]');
       const t = file ? textOf(need(resolve(file), `grep: ${file}`)) : (stdin ?? '');
       const re = new RegExp(pat.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*'), f.has('i') ? 'i' : '');
       const hits = linesOf(t).map((l, i) => [l, i + 1]).filter(([l]) => re.test(l) !== f.has('v'));
@@ -202,37 +202,37 @@ export function openTerminal() {
     uniq: (args, stdin) => { const t = args[0] ? textOf(need(resolve(args[0]), `uniq: ${args[0]}`)) : (stdin ?? ''); return esc(linesOf(t).filter((l, i, a) => i === 0 || l !== a[i - 1]).join('\n')); },
     rm: (args) => {
       const { f, rest } = flags(args);
-      if (!rest.length) err('rm: 지울 파일을 적어 주세요');
+      if (!rest.length) err('usage: rm [-r] <path>');
       rest.forEach((p) => {
         const id = need(resolve(p), `rm: ${p}`);
-        if (S.node(id).system) err(`rm: ${p}: 기본 폴더는 지울 수 없어요`);
-        if (isDir(id) && !f.has('r')) err(`rm: ${p}: 폴더예요 (rm -r 을 쓰세요)`);
+        if (S.node(id).system) err(`rm: ${p}: Operation not permitted (system folder)`);
+        if (isDir(id) && !f.has('r')) err(`rm: ${p}: Is a directory (use rm -r)`);
         S.trash(id);
       });
       return null;
     },
-    rmdir: ([p]) => { const id = need(resolve(p), `rmdir: ${p}`); if (!isDir(id)) err(`rmdir: ${p}: 폴더가 아니에요`); if (S.children(id).length) err(`rmdir: ${p}: 폴더가 비어 있지 않아요`); S.trash(id); return null; },
+    rmdir: ([p]) => { const id = need(resolve(p), `rmdir: ${p}`); if (!isDir(id)) err(`rmdir: ${p}: Not a directory`); if (S.children(id).length) err(`rmdir: ${p}: Directory not empty`); S.trash(id); return null; },
     mv: ([a, b]) => {
-      if (!a || !b) err('사용법: mv <원본> <대상>');
+      if (!a || !b) err('usage: mv <source> <dest>');
       const id = need(resolve(a), `mv: ${a}`);
       const t = resolve(b);
-      if (t && isDir(t)) { if (!S.move(id, t)) err(`mv: ${a}: 옮길 수 없어요`); return null; }
+      if (t && isDir(t)) { if (!S.move(id, t)) err(`mv: ${a}: Cannot move`); return null; }
       const { pid, name } = parentAndName(b);
-      if (!pid) err(`mv: ${b}: 그런 폴더가 없어요`);
-      if (pid !== S.node(id).parent && !S.move(id, pid)) err(`mv: ${a}: 옮길 수 없어요`);
+      if (!pid) err(`mv: ${b}: No such directory`);
+      if (pid !== S.node(id).parent && !S.move(id, pid)) err(`mv: ${a}: Cannot move`);
       if (name && name !== S.node(id).name) S.rename(id, name);
       return null;
     },
     cp: (args) => {
       const { rest } = flags(args);
       const [a, b] = rest;
-      if (!a || !b) err('사용법: cp <원본> <대상>');
+      if (!a || !b) err('usage: cp <source> <dest>');
       const id = need(resolve(a), `cp: ${a}`);
       const c = S.duplicate(id);
       const t = resolve(b);
       if (t && isDir(t)) { S.move(c.id, t); S.rename(c.id, S.node(id).name); return null; }
       const { pid, name } = parentAndName(b);
-      if (!pid) err(`cp: ${b}: 그런 폴더가 없어요`);
+      if (!pid) err(`cp: ${b}: No such directory`);
       if (pid !== c.parent) S.move(c.id, pid);
       S.rename(c.id, name);
       return null;
@@ -263,11 +263,11 @@ export function openTerminal() {
       return lines.join('\n') + `\n\n${dirs} directories, ${files} files`;
     },
     open: ([p]) => { const id = need(resolve(p), `open: ${p}`); import('../ui.js').then((m) => m.openNode(id)); return null; },
-    chmod: () => '<span class="t-dim">(연습용) 권한 표시는 바뀌지 않아요. 실제 리눅스에서는 chmod 755 파일 처럼 써요.</span>',
-    sudo: (a) => (a.length ? `<span class="t-dim">[sudo] ${user()}의 비밀번호: ****</span>\n` + run(a.join(' '), true) : 'usage: sudo 명령'),
+    chmod: () => '<span class="t-dim">(practice) Permissions are not changed. On real Linux: chmod 755 file</span>',
+    sudo: (a) => (a.length ? `<span class="t-dim">[sudo] password for ${user()}: ****</span>\n` + run(a.join(' '), true) : 'usage: sudo <command>'),
     ps: () => `  PID TTY      TIME CMD\n  101 ttys000  0:00.04 zsh\n  ${200 + Math.floor(Math.random() * 99)} ttys000  0:00.01 ps`,
-    kill: ([pid]) => (pid ? `<span class="t-dim">(연습용) ${esc(pid)}번 프로세스에 신호를 보냈다고 가정해요.</span>` : 'kill: 사용법: kill <PID>'),
-    man: ([c]) => { const h = HELP.find(([x]) => x.split(/[\s/[]/)[0] === c); return h ? `<span class="t-cmd">${esc(h[0])}</span>\n    ${esc(h[1])}` : `${esc(c || '')}: 설명이 없어요. help 로 전체 목록을 볼 수 있어요.`; },
+    kill: ([pid]) => (pid ? `<span class="t-dim">(practice) Pretending to send a signal to process ${esc(pid)}.</span>` : 'usage: kill <PID>'),
+    man: ([c]) => { const h = HELP.find(([x]) => x.split(/[\s/[]/)[0] === c); return h ? `<span class="t-cmd">${esc(h[0])}</span>\n    ${esc(h[1])}` : `No manual entry for ${esc(c || '')}. Type help to see all commands.`; },
   };
 
   function runOne(seg, stdin) {
@@ -283,14 +283,14 @@ export function openTerminal() {
     if (at >= 0) {
       const op = seg[at + 1] === '>' ? '>>' : '>';
       const file = tokenize(seg.slice(at + op.length))[0];
-      if (!file) err('파일 이름을 적어 주세요 (예: echo 안녕 > 인사.txt)');
+      if (!file) err('zsh: parse error: missing file name (e.g. echo hello > hi.txt)');
       redir = { op, file };
       seg = seg.slice(0, at);
     }
     const [cmd, ...args] = tokenize(seg);
     if (!cmd) return '';
     const fn = CMDS[cmd];
-    if (!fn) err(`zsh: command not found: ${cmd}  (help 로 쓸 수 있는 명령어를 볼 수 있어요)`);
+    if (!fn) err(`zsh: command not found: ${cmd}  (type help to see available commands)`);
     let res = fn(args, stdin);
     if (redir) {
       const plain = String(res ?? '').replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");

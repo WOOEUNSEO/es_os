@@ -831,3 +831,81 @@ body.locked #dock { transform: translate(-50%, 140%); opacity: 0; }
 .web-form .web-add { justify-self: start; }
 .term-in:focus, .term-in:focus-visible { outline: none !important; box-shadow: none !important; }
 .note-body:focus-visible, .note-title:focus-visible { outline: none; }
+
+/* ===================== 캘린더: 종류 · 반복 · 함께하는 사람 · 수정 ===================== */
+.calendar .cal-side { width: 278px; gap: 10px; overflow: auto; }
+.calendar .cal-events { min-height: 60px; }
+.cal-ev { cursor: pointer; padding: 8px 8px 8px 9px; gap: 9px; }
+.cal-ev:hover { border-color: color-mix(in srgb, var(--c) 40%, var(--hair)); }
+.cal-ev.editing { border-color: var(--c); box-shadow: 0 0 0 2px color-mix(in srgb, var(--c) 22%, transparent); }
+.cal-ev i { display: none; }
+.cal-ev-ic { width: 28px; height: 28px; border-radius: 8px; flex: none; display: grid; place-items: center; align-self: flex-start;
+  background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); }
+.cal-ev-ic svg { width: 16px; height: 16px; }
+.cal-ev small { display: block; }
+.cal-ev small.who { display: flex; align-items: center; gap: 3px; color: color-mix(in srgb, var(--c) 70%, var(--ink)); font-weight: 600; margin-top: 1px; }
+.cal-ev small.who svg { width: 11px; height: 11px; flex: none; }
+.cal-ev .ed { border: 0; background: none; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; color: var(--ink-3); opacity: 0; transition: opacity .15s; flex: none; }
+.cal-ev .ed svg { width: 13px; height: 13px; }
+.cal-ev:hover .ed { opacity: 1; }
+.cal-ev .ed:hover { background: var(--hover); color: var(--accent); }
+@media (hover: none) { .cal-ev .ed, .cal-ev .x { opacity: 1; } }
+
+.cal-add { gap: 8px; padding: 10px; border-radius: 12px; background: var(--card); border: 1px solid var(--hair); }
+.cal-add.is-editing { border-color: var(--accent); }
+.cal-form-head { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; }
+.cal-form-head b { font-weight: 700; }
+.cf-cancel { border: 0; background: none; font-size: 12px; color: var(--ink-3); padding: 2px 4px; border-radius: 6px; }
+.cf-cancel:hover { background: var(--hover); color: var(--ink); }
+.cal-cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.cal-cat { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 5px; border-radius: 9px; border: 1px solid var(--hair); background: none;
+  font-size: 11px; font-weight: 600; color: var(--ink-2); transition: background .15s, border-color .15s, color .15s; }
+.cal-cat svg { width: 17px; height: 17px; }
+.cal-cat:hover { background: var(--hover); }
+.cal-cat.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 13%, transparent); color: color-mix(in srgb, var(--c) 80%, var(--ink)); }
+.cal-add .ev-title { flex: none; width: 100%; height: 30px; }
+.cf-when { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.cf-when input[type="time"], .cf-when input[type="date"], .cf-until input {
+  height: 28px; padding: 0 6px; border-radius: 7px; border: 1px solid var(--hair-strong); background: var(--field); font-size: 12px; outline: none; color: var(--ink); min-width: 0;
+}
+.cf-when input[type="time"] { flex: 1; }
+.cf-when input[type="date"] { width: 100%; }
+.cf-tilde { font-size: 12px; color: var(--ink-3); }
+.cf-label { font-size: 11.5px; font-weight: 700; color: var(--ink-2); margin-bottom: 5px; }
+.cf-label small { font-weight: 400; color: var(--ink-3); margin-left: 4px; }
+.cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal-dowbtn { height: 26px; border-radius: 7px; border: 1px solid var(--hair); background: none; font-size: 11.5px; font-weight: 600; color: var(--ink-2); padding: 0; }
+.cal-dowbtn.sun { color: #e5484d; }
+.cal-dowbtn:hover { background: var(--hover); }
+.cal-dowbtn.on { background: var(--accent); border-color: transparent; color: #fff; }
+.cf-until { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 6px; font-size: 11.5px; color: var(--ink-3); }
+.cf-until[hidden] { display: none; }
+.cal-people { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-height: 30px; padding: 3px 6px; border-radius: 8px; border: 1px solid var(--hair-strong); background: var(--field); cursor: text; }
+.cal-people .chips { display: contents; }
+.pchip { display: inline-flex; align-items: center; gap: 2px; height: 22px; padding: 0 3px 0 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: color-mix(in srgb, #ef5f97 15%, transparent); color: color-mix(in srgb, #ef5f97 80%, var(--ink)); }
+.pchip button { border: 0; background: none; width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; color: inherit; padding: 0; }
+.pchip button svg { width: 10px; height: 10px; }
+.pchip button:hover { background: rgba(0, 0, 0, .08); }
+.ev-person { flex: 1; min-width: 60px; border: 0; background: none; outline: none; font-size: 12.5px; color: var(--ink); height: 22px; }
+.cal-add .row { justify-content: space-between; }
+.cal-add .cf-save { width: auto; padding: 0 14px; height: 28px; }
+.cf-repeat[hidden], .cf-people[hidden] { display: none; }
+
+/* 한 칸에 일정이 여러 개면 글씨를 작게 해서 잘리지 않게 */
+.cal-cell .ev em { font-style: normal; opacity: .75; margin-right: 3px; font-variant-numeric: tabular-nums; }
+.cal-cell.multi { gap: 1px; }
+.cal-cell.multi .ev { font-size: 9.5px; line-height: 1.38; padding: 0 3px; border-radius: 3px; letter-spacing: -.02em; }
+.cal-cell.multi .ev em { margin-right: 2px; }
+.cal-cell.multi .more { font-size: 9.5px; line-height: 1.2; }
+
+/* 메모 체크리스트 버튼 */
+.notes .tb.chk svg { width: 18px; height: 18px; }
+/* 일정 글씨가 잘리지 않게: 두 줄까지 보여주기 */
+.cal-cell .ev { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; word-break: keep-all; overflow-wrap: anywhere; font-size: 10.5px; line-height: 1.35; padding: 1px 4px; }
+.cal-cell.multi .ev { font-size: 9.5px; line-height: 1.3; padding: 0 3px; }
+.calendar .cal-events { flex: none; overflow: visible; }
+@media (max-width: 720px) {
+  .cal-cell .ev, .cal-cell.multi .ev { display: block; font-size: 0; height: 5px; padding: 0; }
+  .calendar .cal-side { width: auto; }
+}

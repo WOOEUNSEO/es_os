@@ -255,9 +255,27 @@ export function removeEvent(id) {
   state.events = state.events.filter((e) => e.id !== id);
   emit('events');
 }
+export function updateEvent(id, patch) {
+  const e = state.events.find((x) => x.id === id);
+  if (e) Object.assign(e, patch);
+  emit('events');
+}
+// 반복 일정에서 이 날 하루만 빼기
+export function skipEventOn(id, dateKey) {
+  const e = state.events.find((x) => x.id === id);
+  if (e) e.skip = [...new Set([...(e.skip || []), dateKey])];
+  emit('events');
+}
+// 반복 일정(repeat.days: 0=일 … 6=토)은 시작일부터 끝나는 날(until)까지 그 요일마다 보여요.
+export function occursOn(e, dateKey) {
+  if (!e.repeat?.days?.length) return e.date === dateKey;
+  if (dateKey < e.date || (e.repeat.until && dateKey > e.repeat.until) || e.skip?.includes(dateKey)) return false;
+  const [y, m, d] = dateKey.split('-').map(Number);
+  return e.repeat.days.includes(new Date(y, m - 1, d).getDay());
+}
 export function eventsOn(dateKey) {
   return state.events
-    .filter((e) => e.date === dateKey)
+    .filter((e) => occursOn(e, dateKey))
     .sort((a, b) => (a.time || '99').localeCompare(b.time || '99'));
 }
 export function addTodo(text) {

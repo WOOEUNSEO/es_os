@@ -77,7 +77,14 @@ export function openTerminal() {
   const isDir = (id) => S.node(id)?.type === 'folder';
   const textOf = (id) => { const n = S.node(id); return n?.kind === 'text' ? String(n.content || '') : `[${n?.kind || '파일'} 파일은 터미널에서 내용을 볼 수 없어요]`; };
   const err = (m) => { throw new Error(m); };
-  const need = (id, p) => id || err(`${p}: 그런 파일이나 폴더가 없어요`);
+  // 없는 경로면 같은 이름이 다른 곳에 있는지 찾아서 알려준다 (예: ~/데스크탑/ES)
+  const hintFor = (p) => {
+    const name = String(p || '').replace(/^[a-z]+: /, '').split('/').filter(Boolean).pop();
+    if (!name || name === '.' || name === '..') return '';
+    const found = S.allNodes((n) => n.name === name).slice(0, 3).map((n) => S.pathOf(n.id));
+    return found.length ? `\n  혹시 여기 있는 걸 말한 거예요? ${found.join(' · ')}\n  지금 위치는 ${shortPath(cwd)} 예요. (pwd 로 확인, ls 로 둘러보기)` : '';
+  };
+  const need = (id, p) => id || err(`${p}: 그런 파일이나 폴더가 없어요${hintFor(p)}`);
   const linesOf = (t) => (t.endsWith('\n') ? t.slice(0, -1) : t).split('\n');
 
   // ---------- 명령 ----------
